@@ -1,0 +1,108 @@
+npx create-react-app bounty-hunter-hub
+cd bounty-hunter-hub
+npm start
+import React from 'react';
+
+const Navbar = () => {
+  return (
+    <nav className="bg-gray-800 p-4 text-white flex justify-between items-center">
+      <h1 className="text-xl font-bold">Bounty Hunter Hub</h1>
+      <ul className="flex space-x-6">
+        <li><a href="/">Home</a></li>
+        <li><a href="/quests">Quests</a></li>
+        <li><a href="/team">Team</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </nav>
+  );
+};
+
+export default Navbar;
+import React, { useState, useEffect } from 'react';
+
+const QuestList = () => {
+  const [quests, setQuests] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/quests')
+      .then((response) => response.json())
+      .then((data) => setQuests(data))
+      .catch((error) => console.error('Error fetching quests:', error));
+  }, []);
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold my-4">Active Quests</h2>
+      <ul>
+        {quests.map((quest) => (
+          <li key={quest._id} className="mb-4">
+            <h3 className="text-xl font-semibold">{quest.title}</h3>
+            <p>{quest.description}</p>
+            <p>Reward: {quest.reward}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default QuestList;
+import React from 'react';
+import Navbar from './components/Navbar';
+import QuestList from './components/QuestList';
+
+function App() {
+  return (
+    <div className="App">
+      <Navbar />
+      <div className="container mx-auto p-4">
+        <QuestList />
+      </div>
+    </div>
+  );
+}
+
+export default App;
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init
+mkdir backend
+cd backend
+npm init -y
+npm install express mongoose cors dotenv jsonwebtoken bcryptjs
+const mongoose = require('mongoose');
+
+const questSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  reward: { type: String, required: true },
+  deadline: { type: Date, required: true },
+});
+
+module.exports = mongoose.model('Quest', questSchema);
+const express = require('express');
+const router = express.Router();
+const Quest = require('../models/Quest');
+
+// Get all quests
+router.get('/', async (req, res) => {
+  try {
+    const quests = await Quest.find();
+    res.json(quests);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching quests' });
+  }
+});
+
+// Create a new quest
+router.post('/', async (req, res) => {
+  try {
+    const quest = new Quest(req.body);
+    await quest.save();
+    res.status(201).json(quest);
+  } catch (error) {
+    res.status(400).json({ error: 'Error creating quest' });
+  }
+});
+
+module.exports = router;
+MONGO_URI=your-mongo-db-connection-string
